@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Calendrier de l'Avent GFDJ</title>
+<link rel="icon" href="img/logos/team.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .adm{padding-block:28px 60px;display:grid;gap:18px}
+  .adm h1{font-size:clamp(40px,6vw,64px)}
+  .card{background:var(--blanc);color:var(--nuit);padding:20px}
+  .card h2{font-family:var(--f-titre);font-weight:400;font-size:30px;margin:0 0 4px;letter-spacing:.02em}
+  .card p{color:var(--texte);font-size:13.5px;margin:0 0 12px;line-height:1.45}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  .bar select,.bar input{border:1px solid var(--filet);padding:10px;font:inherit;font-size:15px;background:#F7F9FB;color:var(--nuit)}
+  .btn{background:var(--nuit);color:var(--blanc);border:0;padding:11px 16px;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .btn.red{background:var(--rouge)}
+  .btn.line{background:none;color:var(--nuit);box-shadow:inset 0 0 0 1px var(--filet)}
+  .btn[disabled]{opacity:.5;cursor:wait}
+  .tw{overflow-x:auto;max-height:340px;border:1px solid var(--filet)}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+  th{background:var(--nuit);color:var(--blanc);text-align:left;padding:8px 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;position:sticky;top:0}
+  td{padding:7px 10px;border-bottom:1px solid #E3E9F1;color:var(--texte);white-space:nowrap}
+  tr:nth-child(even) td{background:#F2F4F7}
+  .winner{background:#EEF2F7;border-left:3px solid var(--rouge);padding:12px 14px;margin-top:12px;font-size:14px}
+  .winner b{font-family:var(--f-titre);font-weight:400;font-size:26px;color:var(--nuit);display:block}
+  .stat{display:flex;flex-wrap:wrap;gap:22px;margin-bottom:12px}
+  .stat div{font-size:12px;color:var(--texte)}
+  .stat b{display:block;font-family:var(--f-titre);font-weight:400;font-size:34px;color:var(--nuit)}
+  textarea{width:100%;min-height:220px;border:1px solid var(--filet);padding:10px;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;color:var(--nuit);background:#F7F9FB}
+  .msg{font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
+  .msg.ko{color:var(--rouge)} .msg.okk{color:#0A7A4B}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap"><span id="who">Espace administrateur</span><span class="actions"><button class="linkbtn" id="btnOut" type="button" hidden>Se déconnecter</button></span></div></div>
+
+<main class="wrap adm">
+  <div>
+    <p class="kicker">Équipe cycliste Groupama-FDJ UNITED</p>
+    <h1>Admin · calendrier de l'Avent</h1>
+  </div>
+
+  <!-- Connexion -->
+  <section class="card" id="cLogin">
+    <h2>Connexion</h2>
+    <p id="loginTxt">Entre ton adresse e-mail d'administrateur : tu reçois un lien de connexion.</p>
+    <form class="bar" id="fLogin" novalidate>
+      <input type="email" id="aEmail" placeholder="prenom.nom@…" autocomplete="email" style="flex:1 1 240px" required>
+      <button class="btn" type="submit" id="aSend">Recevoir mon lien</button>
+    </form>
+    <div class="msg" id="loginMsg" role="status"></div>
+  </section>
+
+  <div id="panels" hidden style="display:grid;gap:18px">
+    <!-- Tirage -->
+    <section class="card">
+      <h2>Tirage au sort du jour</h2>
+      <p>Choisis la case, charge les participants, télécharge la liste puis tire le gagnant. Chaque tirage est enregistré avec la date, l'heure et ton e-mail.</p>
+      <div class="bar">
+        <select id="dDay" aria-label="Case"></select>
+        <button class="btn" type="button" id="dLoad">Charger les participants</button>
+        <button class="btn line" type="button" id="dCsv" disabled>Télécharger la liste (Excel)</button>
+        <button class="btn red" type="button" id="dDraw" disabled>Tirer au sort</button>
+      </div>
+      <div class="msg" id="dMsg" role="status"></div>
+      <div id="dWinner"></div>
+      <div class="tw" id="dTable" hidden></div>
+    </section>
+
+    <!-- Statistiques et exports -->
+    <section class="card">
+      <h2>Inscrits et exports</h2>
+      <p>Les inscrits sont uniques : une adresse e-mail = un compte, donc pas de doublons à trier.</p>
+      <div class="stat" id="stats"></div>
+      <div class="bar">
+        <button class="btn" type="button" id="sLoad">Actualiser les chiffres</button>
+        <button class="btn line" type="button" id="eAll">Exporter tous les inscrits (Excel)</button>
+        <button class="btn line" type="button" id="eMc">Exporter pour Mailchimp (newsletter acceptée)</button>
+      </div>
+      <div class="msg" id="sMsg" role="status"></div>
+      <div class="tw" id="sTable" hidden></div>
+    </section>
+
+    <!-- Lots -->
+    <section class="card">
+      <h2>Lots des 24 cases</h2>
+      <p>Les lots restent secrets : le public ne voit un lot qu'à l'ouverture de sa case. Colle ici le contenu du fichier <b>lots.json</b>, ou charge les lots actuels pour les modifier, puis enregistre.</p>
+      <div class="bar">
+        <button class="btn line" type="button" id="lLoad">Charger les lots actuels</button>
+        <button class="btn" type="button" id="lSave">Enregistrer les lots</button>
+      </div>
+      <textarea id="lText" spellcheck="false" aria-label="Lots au format JSON" placeholder='[ { "day": 1, "partner": "Bioracer", "lot": "3 tenues Bioracer" }, … ]'></textarea>
+      <div class="msg" id="lMsg" role="status"></div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, getCountFromServer, serverTimestamp, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { firebaseConfig, START_DATE, PARTNERS } from "./config.js";
+
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+auth.languageCode = "fr";
+const $ = (id) => document.getElementById(id);
+const LS = "gfdj-avent-admin-email";
+const msg = (id, t, ok) => { const m = $(id); m.textContent = t; m.className = "msg " + (ok === true ? "okk" : ok === false ? "ko" : ""); };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Dates (heure de Paris)
+const [SY, SM, SD] = START_DATE.split("-").map(Number);
+const openAt = (n) => Date.UTC(SY, SM - 1, SD) + (n - 1) * 864e5 - 36e5;
+const MO = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const dLabel = (n) => { const d = new Date(Date.UTC(SY, SM - 1, SD + n - 1)); return `${d.getUTCDate()} ${MO[d.getUTCMonth()]}`; };
+const fmtDate = (ts) => ts ? ts.toDate().toLocaleString("fr-FR", { timeZone: "Europe/Paris" }) : "";
+const fmtDay = (ts) => ts ? ts.toDate().toISOString().slice(0, 10).split("-").reverse().join("/") : "";
+const age = (ts) => { if (!ts) return ""; const b = ts.toDate(), n = new Date(); let a = n.getUTCFullYear() - b.getUTCFullYear(); if (n.getUTCMonth() < b.getUTCMonth() || (n.getUTCMonth() === b.getUTCMonth() && n.getUTCDate() < b.getUTCDate())) a--; return a; };
+const SEXE = { F: "Femme", M: "Homme", X: "Autre", "": "" };
+
+// Fichiers à télécharger (Excel FR : séparateur ; + BOM)
+function download(name, rows, sep = ";") {
+  const q = (v) => { const s = String(v ?? ""); return /[";,\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = "﻿" + rows.map((r) => r.map(q).join(sep)).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function table(el, head, rows) {
+  el.innerHTML = `<table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  el.hidden = false;
+}
+const stamp = () => new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+// ---------- Connexion ----------
+$("fLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("aEmail").value.trim().toLowerCase();
+  if (!email.includes("@")) return msg("loginMsg", "Adresse e-mail invalide.", false);
+  $("aSend").disabled = true;
+  try {
+    if (isSignInWithEmailLink(auth, location.href)) {
+      await signInWithEmailLink(auth, email, location.href);
+      history.replaceState(null, "", location.pathname);
+    } else {
+      await sendSignInLinkToEmail(auth, email, { url: location.origin + location.pathname, handleCodeInApp: true });
+      localStorage.setItem(LS, email);
+      msg("loginMsg", `Lien envoyé à ${email}. Ouvre-le sur cet appareil.`, true);
+    }
+  } catch (err) { console.error(err); msg("loginMsg", "Échec : " + (err.code || err.message), false); }
+  finally { $("aSend").disabled = false; }
+});
+if (isSignInWithEmailLink(auth, location.href)) {
+  let saved = null; try { saved = localStorage.getItem(LS); } catch (e) {}
+  if (saved) signInWithEmailLink(auth, saved, location.href).then(() => history.replaceState(null, "", location.pathname)).catch((err) => msg("loginMsg", "Lien expiré ou déjà utilisé. Demande un nouveau lien.", false));
+  else { $("loginTxt").textContent = "Confirme ton adresse e-mail pour terminer la connexion."; $("aSend").textContent = "Me connecter"; }
+}
+$("btnOut").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (u) => {
+  $("btnOut").hidden = !u;
+  if (!u) { $("cLogin").hidden = false; $("panels").hidden = true; $("who").textContent = "Espace administrateur"; return; }
+  $("who").textContent = "Connecté : " + u.email;
+  try {
+    await getDocs(query(collection(db, "users"), limit(1)));
+    $("cLogin").hidden = true; $("panels").hidden = false; loadStats();
+  } catch (e) {
+    $("cLogin").hidden = false; $("panels").hidden = true;
+    msg("loginMsg", `Le compte ${u.email} n'est pas administrateur. Ajoute-le dans les règles Firestore.`, false);
+  }
+});
+
+// ---------- Tirage ----------
+(function () {
+  const sel = $("dDay"), now = Date.now();
+  let def = 1;
+  for (let n = 1; n <= 24; n++) if (now >= openAt(n) + 864e5) def = n;   // dernière case fermée
+  sel.innerHTML = PARTNERS.map((p, i) => `<option value="${i + 1}"${i + 1 === def ? " selected" : ""}>Case ${i + 1} · ${dLabel(i + 1)} · ${esc(p || "Équipe")}</option>`).join("");
+})();
+let parts = [], drawn = [];
+$("dLoad").onclick = async () => {
+  const n = +$("dDay").value; $("dWinner").innerHTML = ""; drawn = [];
+  msg("dMsg", "Chargement…");
+  try {
+    const qs = await getDocs(query(collection(db, "participations"), where("day", "==", n)));
+    parts = qs.docs.map((d) => d.data()).sort((a, b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
+    msg("dMsg", `${parts.length} participant${parts.length > 1 ? "s" : ""} pour la case ${n}.`, true);
+    table($("dTable"), ["#", "Prénom", "Nom", "E-mail", "Code postal", "Participation"], parts.map((p, i) => [i + 1, p.firstName, p.lastName, p.email, p.postalCode, fmtDate(p.createdAt)]));
+    $("dCsv").disabled = $("dDraw").disabled = parts.length === 0;
+    if (Date.now() < openAt(n) + 864e5) msg("dMsg", `${parts.length} participant(s) pour l'instant : la case ${n} est encore ouverte, attends sa fermeture (minuit) pour tirer au sort.`, false);
+    const prev = await getDoc(doc(db, "draws", String(n)));
+    if (prev.exists()) {
+      const d = prev.data();
+      $("dWinner").innerHTML = `<div class="winner">Tirage déjà effectué le ${esc(fmtDate(d.drawnAt))} par ${esc(d.drawnBy)} :<b>${esc(d.winners.map((w) => w.firstName + " " + w.lastName).join(" · "))}</b>${esc(d.winners.map((w) => w.email).join(" · "))}</div>`;
+    }
+  } catch (e) { console.error(e); msg("dMsg", "Erreur de chargement : " + (e.code || e.message), false); }
+};
+$("dCsv").onclick = () => {
+  const n = +$("dDay").value;
+  download(`GFDJ_Avent_Case${String(n).padStart(2, "0")}_participants_${stamp()}.csv`,
+    [["Prénom", "Nom", "E-mail", "Code postal", "Date et heure de participation"], ...parts.map((p) => [p.firstName, p.lastName, p.email, p.postalCode, fmtDate(p.createdAt)])]);
+};
+$("dDraw").onclick = async () => {
+  const n = +$("dDay").value;
+  const pool = parts.filter((p) => !drawn.includes(p.uid));
+  if (!pool.length) return msg("dMsg", "Plus personne à tirer au sort.", false);
+  const r = new Uint32Array(1); crypto.getRandomValues(r);
+  const w = pool[r[0] % pool.length]; drawn.push(w.uid);
+  const winners = parts.filter((p) => drawn.includes(p.uid)).map((p) => ({ uid: p.uid, firstName: p.firstName, lastName: p.lastName, email: p.email, postalCode: p.postalCode }));
+  try {
+    await setDoc(doc(db, "draws", String(n)), { day: n, winners, participants: parts.length, drawnAt: serverTimestamp(), drawnBy: auth.currentUser.email });
+  } catch (e) { console.error(e); }
+  $("dWinner").innerHTML = `<div class="winner">${drawn.length === 1 ? "Gagnant" : "Suppléant n°" + (drawn.length - 1)} de la case ${n} (parmi ${parts.length}) :<b>${esc(w.firstName)} ${esc(w.lastName)}</b>${esc(w.email)} · ${esc(w.postalCode)}</div>` + $("dWinner").innerHTML;
+  $("dDraw").textContent = "Tirer un suppléant";
+};
+
+// ---------- Inscrits ----------
+let users = null;
+async function loadUsers() {
+  const qs = await getDocs(collection(db, "users"));
+  users = qs.docs.map((d) => d.data()).sort((a, b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
+  return users;
+}
+async function loadStats() {
+  msg("sMsg", "Calcul…");
+  try {
+    const counts = await Promise.all(PARTNERS.map((_, i) => Date.now() >= openAt(i + 1) ? getCountFromServer(query(collection(db, "participations"), where("day", "==", i + 1))).then((s) => s.data().count) : Promise.resolve(null)));
+    const [all, opt] = await Promise.all([
+      getCountFromServer(collection(db, "users")).then((s) => s.data().count),
+      getCountFromServer(query(collection(db, "users"), where("optinNews", "==", true))).then((s) => s.data().count)
+    ]);
+    const tot = counts.reduce((a, c) => a + (c || 0), 0);
+    $("stats").innerHTML = `<div><b>${all}</b>inscrits</div><div><b>${opt}</b>newsletter acceptée</div><div><b>${tot}</b>participations</div>`;
+    table($("sTable"), ["Case", "Date", "Partenaire", "Participants"], counts.map((c, i) => [i + 1, dLabel(i + 1), PARTNERS[i] || "Équipe", c === null ? "pas encore ouverte" : c]));
+    msg("sMsg", "");
+  } catch (e) { console.error(e); msg("sMsg", "Erreur : " + (e.code || e.message), false); }
+}
+$("sLoad").onclick = loadStats;
+$("eAll").onclick = async () => {
+  msg("sMsg", "Préparation…");
+  try {
+    const u = await loadUsers();
+    download(`GFDJ_Avent_inscrits_${stamp()}.csv`, [["Prénom", "Nom", "E-mail", "Date de naissance", "Âge", "Sexe", "Code postal", "Département", "Ville", "Newsletter", "Inscrit le"],
+      ...u.map((x) => [x.firstName, x.lastName, x.email, fmtDay(x.birthDate), age(x.birthDate), SEXE[x.gender] ?? "", x.postalCode, (x.postalCode || "").slice(0, 2), x.city, x.optinNews ? "Oui" : "Non", fmtDate(x.createdAt)])]);
+    msg("sMsg", `${u.length} inscrits exportés.`, true);
+  } catch (e) { console.error(e); msg("sMsg", "Erreur : " + (e.code || e.message), false); }
+};
+$("eMc").onclick = async () => {
+  msg("sMsg", "Préparation…");
+  try {
+    const u = (await loadUsers()).filter((x) => x.optinNews);
+    download(`GFDJ_Avent_Mailchimp_${stamp()}.csv`, [["Email Address", "First Name", "Last Name", "Zip", "City", "Tags"],
+      ...u.map((x) => [x.email, x.firstName, x.lastName, x.postalCode, x.city, "Calendrier Avent 2026"])], ",");
+    msg("sMsg", `${u.length} contacts exportés pour Mailchimp.`, true);
+  } catch (e) { console.error(e); msg("sMsg", "Erreur : " + (e.code || e.message), false); }
+};
+
+// ---------- Lots ----------
+$("lLoad").onclick = async () => {
+  msg("lMsg", "Chargement…");
+  try {
+    const docs = await Promise.all(Array.from({ length: 24 }, (_, i) => getDoc(doc(db, "days", String(i + 1)))));
+    const list = docs.map((d, i) => d.exists() ? { day: i + 1, partner: d.data().partner || "", lot: d.data().lot || "" } : { day: i + 1, partner: PARTNERS[i] || "Équipe", lot: "" });
+    $("lText").value = JSON.stringify(list, null, 2);
+    msg("lMsg", `${docs.filter((d) => d.exists()).length} lots enregistrés sur 24.`, true);
+  } catch (e) { console.error(e); msg("lMsg", "Erreur : " + (e.code || e.message), false); }
+};
+$("lSave").onclick = async () => {
+  let list;
+  try { list = JSON.parse($("lText").value); } catch (e) { return msg("lMsg", "Le texte n'est pas au bon format. Recolle le contenu de lots.json sans le modifier.", false); }
+  if (!Array.isArray(list) || list.some((x) => !Number.isInteger(x.day) || x.day < 1 || x.day > 24 || typeof x.lot !== "string" || !x.lot.trim()))
+    return msg("lMsg", "Chaque ligne doit avoir un numéro de case (1 à 24) et un lot non vide.", false);
+  try {
+    const b = writeBatch(db);
+    list.forEach((x) => b.set(doc(db, "days", String(x.day)), { day: x.day, partner: String(x.partner || ""), lot: x.lot.trim() }));
+    await b.commit();
+    msg("lMsg", `${list.length} lots enregistrés.`, true);
+  } catch (e) { console.error(e); msg("lMsg", "Erreur : " + (e.code || e.message), false); }
+};
+</script>
+</body>
+</html>

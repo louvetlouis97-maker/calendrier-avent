@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendrier de l'Avent · Équipe cycliste Groupama-FDJ UNITED</title>
+<meta name="description" content="Du 1er au 24 décembre, une case par jour et un cadeau offert par les partenaires de l'Équipe cycliste Groupama-FDJ UNITED.">
+<meta property="og:title" content="Le calendrier de l'Avent Groupama-FDJ UNITED">
+<meta property="og:description" content="24 cadeaux à gagner, un tirage au sort chaque jour du 1er au 24 décembre.">
+<meta property="og:image" content="img/pere-noel.jpg">
+<meta name="theme-color" content="#1F294C">
+<link rel="icon" href="img/logos/team.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Great+Vibes&family=Gelasio:ital@1&family=Montserrat:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div class="inapp" id="inapp" hidden>
+  <div class="wrap">Pour rester connecté d'un jour à l'autre, ouvre cette page dans ton navigateur : touche « ⋯ » en haut à droite, puis « Ouvrir dans le navigateur ».</div>
+</div>
+
+<div class="topbar">
+  <div class="wrap">
+    <span id="who">Inscris-toi une fois, joue chaque jour en un clic.</span>
+    <span class="actions" id="actions">
+      <button class="linkbtn" type="button" id="btnLogin">Se connecter / S'inscrire</button>
+    </span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-txt">
+      <p class="kicker">Équipe cycliste Groupama-FDJ UNITED</p>
+      <p class="script">Joyeuses fêtes !</p>
+      <h1>Le calendrier<br>de l'<span>Avent</span></h1>
+      <p class="en">Advent calendar · 1–24 December 2026</p>
+      <p class="chapo">Le Père Noël a chaussé ses lunettes : chaque jour, une case s'ouvre et un partenaire de l'équipe met un cadeau en jeu. <strong>Inscris-toi une seule fois, puis clique chaque jour sur la case du jour pour tenter ta chance.</strong> Le gagnant est annoncé le lendemain à 12h sur nos réseaux.</p>
+      <a class="go" href="#grid" id="goToday"><span id="goLabel">Je m'inscris pour jouer</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
+    </div>
+    <figure class="photo">
+      <div class="frame"><img src="img/pere-noel.jpg" width="1000" height="1000" alt="Le Père Noël aux couleurs de l'équipe présente le calendrier de l'Avent Groupama-FDJ UNITED"></div>
+      <figcaption>Ho ho ho, à vos vélos !</figcaption>
+      <div class="sticker" aria-hidden="true"><b>24</b><span>cadeaux à gagner</span></div>
+    </figure>
+  </div>
+  <svg class="hills" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true">
+    <path class="snow" d="M0 70 C120 40 220 30 330 52 C430 72 520 28 640 34 C760 40 840 74 960 62 C1080 50 1180 20 1300 36 C1370 45 1410 56 1440 60 V110 H0Z"/>
+    <path class="ground" d="M0 92 C160 78 300 70 460 84 C620 98 760 72 920 80 C1080 88 1240 70 1440 82 V110 H0Z"/>
+  </svg>
+</header>
+
+<main class="wrap">
+  <div class="info">
+    <div><b>24</b> lots offerts par nos partenaires</div>
+    <div><b>1</b> participation par jour</div>
+    <div><b>12H</b> le gagnant dévoilé le lendemain sur nos réseaux</div>
+  </div>
+  <div class="grid" id="grid" aria-live="polite"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="sig">Groupama – FDJ UNITED</span>
+    <span><a href="reglement.html">Règlement du jeu</a> · <a href="confidentialite.html">Données personnelles</a> · Jeu gratuit sans obligation d'achat, réservé aux 18 ans et plus, France métropolitaine.</span>
+  </div>
+</footer>
+
+<!-- Fenêtre unique : son contenu change selon l'étape -->
+<div class="ov" id="ov" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="top">
+      <div>
+        <p class="kicker" id="mKicker"></p>
+        <h2 id="mTitle"></h2>
+      </div>
+      <button class="x" type="button" data-close aria-label="Fermer">×</button>
+    </div>
+
+    <!-- 1. Connexion -->
+    <form id="vLogin" novalidate hidden>
+      <p class="lead">Entre ton adresse e-mail : tu vas recevoir un <strong>lien de connexion</strong>. Pas de mot de passe à retenir. Ensuite, tu restes connecté sur cet appareil.</p>
+      <div class="f"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" inputmode="email" required></div>
+      <p class="err" id="loginErr" role="alert"></p>
+      <button class="submit" type="submit" id="loginBtn">Recevoir mon lien</button>
+    </form>
+
+    <!-- 2. Lien envoyé -->
+    <div id="vSent" class="ok" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 7l9 6 9-6"/></svg>
+      <p>On vient d'envoyer un lien à <span class="mail" id="sentTo"></span>.<br>Ouvre ce mail <strong>sur ce téléphone</strong> et touche le lien pour te connecter. Pense à regarder dans tes spams.</p>
+      <button class="ghost" type="button" id="resend">Changer d'adresse e-mail</button>
+    </div>
+
+    <!-- 3. Confirmation de l'e-mail (lien ouvert sur un autre navigateur) -->
+    <form id="vConfirm" novalidate hidden>
+      <p class="lead">Pour finir ta connexion, confirme l'adresse e-mail à laquelle tu as reçu le lien.</p>
+      <div class="f"><label for="confirmEmail">E-mail</label><input id="confirmEmail" type="email" autocomplete="email" inputmode="email" required></div>
+      <p class="err" id="confirmErr" role="alert"></p>
+      <button class="submit" type="submit">Me connecter</button>
+    </form>
+
+    <!-- 4. Profil -->
+    <form id="vProfile" novalidate hidden>
+      <p class="lead" id="profileLead">Dernière étape, une seule fois : complète ton profil pour participer aux tirages.</p>
+      <div class="row">
+        <div class="f"><label for="pPrenom">Prénom</label><input id="pPrenom" autocomplete="given-name" maxlength="60" required></div>
+        <div class="f"><label for="pNom">Nom</label><input id="pNom" autocomplete="family-name" maxlength="60" required></div>
+      </div>
+      <div class="f">
+        <label id="lblBirth">Date de naissance</label>
+        <div class="row3" role="group" aria-labelledby="lblBirth">
+          <select id="pJour" aria-label="Jour"></select>
+          <select id="pMois" aria-label="Mois"></select>
+          <select id="pAnnee" aria-label="Année"></select>
+        </div>
+      </div>
+      <div class="f">
+        <label for="pSexe">Sexe <span class="opt">· facultatif</span></label>
+        <select id="pSexe">
+          <option value="">Je préfère ne pas répondre</option>
+          <option value="F">Femme</option>
+          <option value="M">Homme</option>
+          <option value="X">Autre</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="f"><label for="pCp">Code postal</label><input id="pCp" inputmode="numeric" autocomplete="postal-code" maxlength="5" pattern="[0-9]{5}" required></div>
+        <div class="f"><label for="pVille">Ville</label><input id="pVille" list="villes" autocomplete="address-level2" maxlength="80" required><datalist id="villes"></datalist></div>
+      </div>
+      <p class="f"><span class="hint">Ton âge, ton sexe et ta ville servent uniquement à des statistiques anonymes pour nos partenaires et à te proposer des événements près de chez toi.</span></p>
+      <label class="cb" id="cguRow"><input type="checkbox" id="pCgu"><span>J'ai lu et j'accepte le <a href="reglement.html" target="_blank">règlement du jeu</a> et j'ai 18 ans ou plus.</span></label>
+      <label class="cb"><input type="checkbox" id="pOptin"><span><span class="opt">Facultatif</span><br>J'accepte de recevoir par e-mail les actualités de l'Équipe cycliste Groupama-FDJ UNITED et de son futur club de supporters, Les ultras. Désinscription possible à tout moment.</span></label>
+      <p class="err" id="profileErr" role="alert"></p>
+      <button class="submit" type="submit" id="profileBtn">Valider mon profil</button>
+      <p class="rgpd">Tes données sont utilisées par l'Équipe cycliste Groupama-FDJ UNITED pour gérer les tirages au sort et, si tu l'as accepté, t'envoyer nos actualités. Elles sont hébergées dans l'Union européenne. <a href="confidentialite.html" target="_blank">En savoir plus et exercer tes droits</a>.</p>
+    </form>
+
+    <!-- 5. Participation du jour -->
+    <div id="vPlay" hidden>
+      <p class="offert" id="playBy"></p>
+      <p class="lead">Une seule participation par jour. Le tirage a lieu demain matin, le résultat est publié à 12h sur nos réseaux et le gagnant est prévenu par e-mail.</p>
+      <p class="err" id="playErr" role="alert"></p>
+      <button class="submit" type="button" id="playBtn">Je participe au tirage</button>
+    </div>
+
+    <!-- 6. C'est joué -->
+    <div id="vOk" class="ok" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg>
+      <p id="okTxt"></p>
+      <button class="submit" type="button" data-close>Retour au calendrier</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
